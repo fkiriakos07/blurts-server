@@ -16,6 +16,8 @@ jobs:
       GAR_IMAGE_BASE: ${{ vars.GAR_REPO }}/${{ github.event.repository.name }}
       GAR_REGISTRY: us-docker.pkg.dev
       DOCKERHUB_IMAGE: mozilla/blurts-server # Define Docker Hub image name
+      VERSION: ${{ steps.meta.outputs.version }}
+      TAGS: ${{ steps.meta.outputs.tags }}
 
     steps:
     - name: Checkout main branch
@@ -37,16 +39,19 @@ jobs:
         tags: type=sha,format=short,prefix=
 
     - name: Pull Docker image from GAR with commit tag
-      run: echo "docker pull ${{ env.GAR_IMAGE_BASE }}:${{ steps.meta.outputs.version }}"
+      run: |
+        echo "docker pull ${{ env.GAR_IMAGE_BASE }}:$VERSION"
+        echo $TAGS
 
     - name: Tag Docker image for Docker Hub with release tag
-      run: echo "docker tag ${{ env.GAR_IMAGE_BASE }}:${{ steps.meta.outputs.version }} ${{ env.DOCKERHUB_IMAGE }}:${{ env.CURRENT_DATE }}"
-
+      run: |
+        echo "docker tag ${{ env.GAR_IMAGE_BASE }}:$VERSION ${{ env.DOCKERHUB_IMAGE }}:${{ env.CURRENT_DATE }}"
+        echo $TAGS
     - name: Push Docker image to Docker Hub with release tag
       run: echo "docker push ${{ env.DOCKERHUB_IMAGE }}:${{ env.CURRENT_DATE }}"
 
     - name: Tag Docker image for GAR with release tag
-      run: echo "docker tag ${{ env.GAR_IMAGE_BASE }}:${{ steps.meta.outputs.version }} ${{ env.GAR_IMAGE_BASE }}:${{ env.CURRENT_DATE }}"
+      run: echo "docker tag ${{ env.GAR_IMAGE_BASE }}:$VERSION ${{ env.GAR_IMAGE_BASE }}:${{ env.CURRENT_DATE }}"
 
     - name: Push Docker image to GAR with release tag
       run: echo "docker push ${{ env.GAR_IMAGE_BASE }}:${{ env.CURRENT_DATE }}"
